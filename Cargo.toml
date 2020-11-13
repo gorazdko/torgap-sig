@@ -1,19 +1,20 @@
 [package]
 name = "minisign"
 version = "0.5.22"
-authors = ["Frank Denis <github@pureftpd.org>", "Daniel Rangel <daniel@rangel.in>"]
-description = "A crate to sign files and verify signatures."
+authors = ["Frank Denis <github@pureftpd.org>", "Daniel Rangel <daniel@rangel.in>", "ChristopherA@LifeWithAlacrity.com"]
+description = "rust-minisign with support for Tor onion keys."
 edition = "2018"
 license = "MIT"
 readme = "README.md"
 categories = ["cryptography"]
-keywords = ["command-line", "sign", "publickey", "cryptography", "minisign"]
-repository = "https://github.com/jedisct1/rust-minisign"
-homepage = "https://github.com/jedisct1/rust-minisign"
+keywords = ["command-line", "sign", "publickey", "cryptography", "minisign", "Tor"]
+repository = "hhttps://github.com/BlockchainCommons/torgap-sig"
 
 [dependencies]
 getrandom = { version = "0.2", default-features = false }
 scrypt = { version = "0.4", default-features = false }
+base32 = "0.4.0"
+sha3 = "0.9.1"
 
 [target.'cfg(any(windows, unix))'.dependencies]
 rpassword = "5.0"

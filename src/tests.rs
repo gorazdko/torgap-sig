@@ -16,7 +16,7 @@ fn byte_array_load() {
 fn pk_key_struct_conversion() {
     use crate::{KeyPair, PublicKey};
 
-    let KeyPair { pk, .. } = KeyPair::generate_unencrypted_keypair().unwrap();
+    let KeyPair { pk, .. } = KeyPair::generate_unencrypted_keypair(None).unwrap();
     assert_eq!(pk, PublicKey::from_bytes(&pk.to_bytes()).unwrap());
 }
 
@@ -24,7 +24,20 @@ fn pk_key_struct_conversion() {
 fn sk_key_struct_conversion() {
     use crate::{KeyPair, SecretKey};
 
-    let KeyPair { sk, .. } = KeyPair::generate_unencrypted_keypair().unwrap();
+    let KeyPair { sk, .. } = KeyPair::generate_unencrypted_keypair(None).unwrap();
+    assert_eq!(sk, SecretKey::from_bytes(&sk.to_bytes()).unwrap());
+}
+
+#[test]
+fn sk_determinstic_key_struct_conversion() {
+    use crate::{KeyPair, SecretKey};
+
+    let seed = vec![
+        0x03, 0x63, 0x04, 0xe1, 0x6b, 0x01, 0x87, 0xfa, 0x9d, 0x7a, 0x35, 0x37, 0xd8, 0x07, 0x29,
+        0x00, 0x03, 0x63, 0x04, 0xe1, 0x6b, 0x01, 0x87, 0xfa, 0x9d, 0x7a, 0x35, 0x37, 0xd8, 0x07,
+        0x29, 0x00,
+    ];
+    let KeyPair { sk, .. } = KeyPair::generate_unencrypted_keypair(Some(seed)).unwrap();
     assert_eq!(sk, SecretKey::from_bytes(&sk.to_bytes()).unwrap());
 }
 
@@ -33,7 +46,7 @@ fn xor_keynum() {
     use crate::KeyPair;
     use getrandom::getrandom;
 
-    let KeyPair { mut sk, .. } = KeyPair::generate_unencrypted_keypair().unwrap();
+    let KeyPair { mut sk, .. } = KeyPair::generate_unencrypted_keypair(None).unwrap();
     let mut key = vec![0u8; sk.keynum_sk.len()];
     getrandom(&mut key).unwrap();
     let original_keynum = sk.keynum_sk.clone();
@@ -47,7 +60,7 @@ fn xor_keynum() {
 fn sk_checksum() {
     use crate::KeyPair;
 
-    let KeyPair { mut sk, .. } = KeyPair::generate_unencrypted_keypair().unwrap();
+    let KeyPair { mut sk, .. } = KeyPair::generate_unencrypted_keypair(None).unwrap();
     assert!(sk.write_checksum().is_ok());
     assert_eq!(sk.keynum_sk.chk.to_vec(), sk.read_checksum().unwrap());
 }
@@ -70,7 +83,7 @@ fn signature() {
     use crate::{sign, verify, KeyPair};
     use std::io::Cursor;
 
-    let KeyPair { pk, sk } = KeyPair::generate_unencrypted_keypair().unwrap();
+    let KeyPair { pk, sk, esk: _ } = KeyPair::generate_unencrypted_keypair(None).unwrap();
     let data = b"test";
     let signature_box = sign(None, &sk, Cursor::new(data), false, None, None).unwrap();
     verify(&pk, &signature_box, Cursor::new(data), true, false).unwrap();
@@ -83,7 +96,7 @@ fn signature_prehashed() {
     use crate::{sign, verify, KeyPair};
     use std::io::Cursor;
 
-    let KeyPair { pk, sk } = KeyPair::generate_unencrypted_keypair().unwrap();
+    let KeyPair { pk, sk, esk: _ } = KeyPair::generate_unencrypted_keypair(None).unwrap();
     let data = b"test";
     let signature_box = sign(None, &sk, Cursor::new(data), true, None, None).unwrap();
     verify(&pk, &signature_box, Cursor::new(data), true, false).unwrap();
@@ -96,7 +109,7 @@ fn signature_bones() {
     use crate::{sign, verify, KeyPair, SignatureBones};
     use std::io::Cursor;
 
-    let KeyPair { pk, sk } = KeyPair::generate_unencrypted_keypair().unwrap();
+    let KeyPair { pk, sk, esk: _ } = KeyPair::generate_unencrypted_keypair(None).unwrap();
     let data = b"test";
     let signature_box = sign(None, &sk, Cursor::new(data), false, None, None).unwrap();
     let signature_bones: SignatureBones = signature_box.into();

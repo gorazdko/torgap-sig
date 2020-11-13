@@ -4,6 +4,7 @@ use crate::crypto::util::fixed_time_eq;
 use crate::errors::*;
 use crate::helpers::*;
 use crate::keynum::*;
+use base32::{decode, Alphabet};
 use std::cmp;
 use std::fmt::Write as fmtWrite;
 use std::fs;
@@ -188,6 +189,30 @@ impl PublicKey {
     {
         let s = fs::read_to_string(pk_path)?;
         PublicKey::from_box(s.into())
+    }
+
+    pub fn from_onion_address(
+        onion_addr: &str,
+        sig_alg: [u8; TWOBYTES],
+        keynum: [u8; KEYNUM_BYTES],
+    ) -> Result<PublicKey> {
+        let mut pk = [0u8; PUBLICKEY_BYTES];
+        // onion_address = base32(PUBKEY | CHECKSUM | VERSION) + ".onion"
+        let onion_decoded =
+            decode(Alphabet::RFC4648 { padding: false }, &onion_addr[0..56]).unwrap(); // TODO
+
+        // TODO handle error gracefully, check checksum and onion version 3
+
+        // read pubkey
+        for (place, element) in pk.iter_mut().zip(onion_decoded.iter()) {
+            *place = *element;
+        }
+
+        let pk = PublicKey {
+            sig_alg,
+            keynum_pk: KeynumPK { keynum, pk },
+        };
+        Ok(pk)
     }
 }
 

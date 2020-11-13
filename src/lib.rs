@@ -14,8 +14,8 @@
 //!     // Generate and return a new key pair
 //!     // The key is encrypted using a password.
 //!     // If `None` is given, the password will be asked for interactively.
-//!     let KeyPair { pk, sk } =
-//!         KeyPair::generate_encrypted_keypair(Some("key password".to_string())).unwrap();
+//!     let KeyPair { pk, sk, esk:_ } =
+//!         KeyPair::generate_encrypted_keypair(None, Some("key password".to_string())).unwrap();
 //!
 //!     // In order to be stored to disk, keys have to be converted to "boxes".
 //!     // A box is just a container, with some metadata about its content.

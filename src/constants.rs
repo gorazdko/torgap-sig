@@ -13,6 +13,15 @@ pub const SIG_DEFAULT_PKFILE: &str = "rsign.pub";
 /// The default file name for the secret key.
 pub const SIG_DEFAULT_SKFILE: &str = "rsign.key";
 
+/// The default file name for the secret key in Tor format.
+pub const SIG_DEFAULT_TORSKFILE: &str = "hs_ed25519_secret_key";
+
+/// The default file name for the public key in Tor format.
+pub const SIG_DEFAULT_TORPKFILE: &str = "hs_ed25519_public_key";
+
+/// The default file name for the onion hostname.
+pub const SIG_DEFAULT_TORONIONFILE: &str = "hostname";
+
 /// The default suffix for signatures.
 pub const SIG_SUFFIX: &str = ".minisig";
 

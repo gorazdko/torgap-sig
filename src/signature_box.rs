@@ -65,6 +65,14 @@ impl SignatureBox {
         &self.signature.keynum[..]
     }
 
+    pub fn get_keynum(&self) -> [u8; KEYNUM_BYTES] {
+        self.signature.keynum
+    }
+
+    pub fn get_sig_alg(&self) -> [u8; TWOBYTES] {
+        self.signature.sig_alg
+    }
+
     /// Create a new `SignatureBox` from a string.
     pub fn from_string(s: &str) -> Result<SignatureBox> {
         let mut lines = s.lines();

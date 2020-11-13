@@ -1,91 +1,98 @@
-[![Build status](https://travis-ci.com/jedisct1/rust-minisign.svg?branch=master)](https://travis-ci.com/jedisct1/rust-minisign?branch=master)
-[![Last version](https://img.shields.io/crates/v/minisign.svg)](https://crates.io/crates/minisign)
-[![Documentation](https://docs.rs/minisign/badge.svg)](https://docs.rs/minisign)
+# Blockchain Commons torgap-sig
 
-# rust-minisign
+`torgap-sig` is a fork of [rust-minisign](https://github.com/jedisct1/rust-minisign)
+with support for Tor onion v3 hidden service keys.
 
-A pure Rust implementation of the [Minisign](https://jedisct1.github.io/minisign/) signature system.
+It allows exporting `minisign` secret to Tor onion v3 keys and hostname
+and verifying signatures with onion v3 addresses.
 
-This is a crate, designed to be used within by applications.
+## Additional Information
 
-For a command-line tool reimplementing the Minisign utility in Rust, and based on this crate, check out [rsign2](https://github.com/jedisct1/rsign2).
+* [Manual](docs/MANUAL.md) on how to use `torgap-sig`
 
-For a minimal crate that to only verify signatures, check out [minisign-verify](https://github.com/jedisct1/rust-minisign-verify).
+## Status - Late Alpha
 
-## API documentation
+`torgap-sig`  is currently under active development and in the late alpha testing phase. It should not be used for production tasks until it has had further testing and auditing.
 
-[API documentation on docs.rs](https://docs.rs/minisign)
+## Origin, Authors, Copyright & Licenses
 
-## Example
+Unless otherwise noted (either in this [/README.md](./README.md) or in the file's header comments) the contents of this repository are Copyright © 2020 by Blockchain Commons, LLC, and are [licensed](./LICENSE) under the [spdx:BSD-2-Clause Plus Patent License](https://spdx.org/licenses/BSD-2-Clause-Patent.html).
 
-```rust
-fn main() {
-    extern crate minisign;
-    use minisign::{KeyPair, PublicKeyBox, SecretKeyBox, SignatureBox};
-    use std::io::Cursor;
+In most cases, the authors, copyright, and license for each file reside in header comments in the source code. When it does not, we have attempted to attribute it accurately in the table below.
 
-    // Generate and return a new key pair
-    // The key is encrypted using a password.
-    // If `None` is given, the password will be asked for interactively.
-    let KeyPair { pk, sk } =
-        KeyPair::generate_encrypted_keypair(Some("key password".to_string())).unwrap();
+This table below also establishes provenance (repository of origin, permalink, and commit id) for files included from repositories that are outside of this repo. Contributors to these files are listed in the commit history for each repository, first with changes found in the commit history of this repo, then in changes in the commit history of their repo of their origin.
 
-    // In order to be stored to disk, keys have to be converted to "boxes".
-    // A box is just a container, with some metadata about its content.
-    // Boxes can be converted to/from strings, making them convenient to use for storage.
-    let pk_box_str = pk.to_box().unwrap().to_string();
-    let sk_box_str = sk
-        .to_box(None) // Optional comment about the key
-        .unwrap()
-        .to_string();
+[No external files]
 
-    // `pk_box_str` and `sk_box_str` can now be saved to disk.
-    // This is a long-term key pair, that can be used to sign as many files as needed.
-    // For conveniency, the `KeyPair::generate_and_write_encrypted_keypair()` function
-    // is available: it generates a new key pair, and saves it to disk (or any `Writer`)
-    // before returning it.
+### Dependencies
 
-    // Assuming that `sk_box_str` is something we previously saved and just reloaded,
-    // it can be converted back to a secret key box:
-    let sk_box = SecretKeyBox::from_string(&sk_box_str).unwrap();
+To build `torgap-sig` you'll need to use the following tools:
 
-    // and the box can be opened using the password to reveal the original secret key:
-    let sk = sk_box
-        .into_secret_key(Some("key password".to_string()))
-        .unwrap();
+* [Rust and Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html)
 
-    // Now, we can use the secret key to sign anything.
-    let data = b"lorem ipsum";
-    let data_reader = Cursor::new(data);
-    let signature_box = minisign::sign(None, &sk, data_reader, false, None, None).unwrap();
 
-    // We have a signature! Let's inspect it a little bit.
-    println!(
-        "Untrusted comment: [{}]",
-        signature_box.untrusted_comment().unwrap()
-    );
-    println!(
-        "Trusted comment: [{}]",
-        signature_box.trusted_comment().unwrap()
-    );
+### Derived from…
 
-    // Converting the signature box to a string in order to save it is easy.
-    let signature_box_str = signature_box.into_string();
+This `torgap-sig` project is either derived from or was inspired by:
 
-    // Now, let's verify the signature.
-    // Assuming we just loaded it into `signature_box_str`, get the box back.
-    let signature_box = SignatureBox::from_string(&signature_box_str).unwrap();
+* [rust-minisign](https://github.com/jedisct1/rust-minisign) by [Frank Denis](https://github.com/jedisct1)
 
-    // Load the public key from the string.
-    let pk_box = PublicKeyBox::from_string(&pk_box_str).unwrap();
-    let pk = pk_box.into_public_key().unwrap();
+### Used with…
 
-    // And verify the data.
-    let data_reader = Cursor::new(data);
-    let verified = minisign::verify(&pk, &signature_box, data_reader, true, false);
-    match verified {
-        Ok(()) => println!("Success!"),
-        Err(_) => println!("Verification failed"),
-    };
-}
-```
+These are other projects that work with or leverage `torgap-sig`:
+
+- [torgap-sig-cli-rust](https://github.com/BlockchainCommons/torgap-sig-cli-rust) — a CLI interface for `torgap-sig`  from  [Blockcahin Commons](https://github.com/BlockchainCommons).
+
+## Financial Support
+
+`torgap-sig` is a project of [Blockchain Commons](https://www.blockchaincommons.com/). We are proudly a "not-for-profit" social benefit corporation committed to open source & open development. Our work is funded entirely by donations and collaborative partnerships with people like you. Every contribution will be spent on building open tools, technologies, and techniques that sustain and advance blockchain and internet security infrastructure and promote an open web.
+
+To financially support further development of `torgap-sig` and other projects, please consider becoming a Patron of Blockchain Commons through ongoing monthly patronage as a [GitHub Sponsor](https://github.com/sponsors/BlockchainCommons). You can also support Blockchain Commons with bitcoins at our [BTCPay Server](https://btcpay.blockchaincommons.com/).
+
+## Contributing
+
+We encourage public contributions through issues and pull requests! Please review [CONTRIBUTING.md](./CONTRIBUTING.md) for details on our development process. All contributions to this repository require a GPG signed [Contributor License Agreement](./CLA.md).
+
+### Discussions
+
+The best place to talk about Blockchain Commons and its projects is in our GitHub Discussions areas.
+
+[**Gordian System Discussions**](https://github.com/BlockchainCommons/Gordian/discussions). For users and developers of the Gordian system, including the Gordian Server, Bitcoin Standup technology, QuickConnect, and the Gordian Wallet. If you want to talk about our linked full-node and wallet technology, suggest new additions to our Bitcoin Standup standards, or discuss the implementation our standalone wallet, the Discussions area of the [main Gordian repo](https://github.com/BlockchainCommons/Gordian) is the place.
+
+[**Wallet Standard Discussions**](https://github.com/BlockchainCommons/AirgappedSigning/discussions). For standards and open-source developers who want to talk about wallet standards, please use the Discussions area of the [Airgapped Signing repo](https://github.com/BlockchainCommons/AirgappedSigning). This is where you can talk about projects like our [LetheKit](https://github.com/BlockchainCommons/bc-lethekit) and command line tools such as [seedtool](https://github.com/BlockchainCommons/bc-seedtool-cli), both of which are intended to testbed wallet technologies, plus the libraries that we've built to support your own deployment of wallet technology such as [bc-bip39](https://github.com/BlockchainCommons/bc-bip39), [bc-slip39](https://github.com/BlockchainCommons/bc-slip39), [bc-shamir](https://github.com/BlockchainCommons/bc-shamir), [Shamir Secret Key Recovery](https://github.com/BlockchainCommons/bc-sskr), [bc-ur](https://github.com/BlockchainCommons/bc-ur), and the [bc-crypto-base](https://github.com/BlockchainCommons/bc-crypto-base). If it's a wallet-focused technology or a more general discussion of wallet standards,discuss it here.
+
+[**Blockchain Commons Discussions**](https://github.com/BlockchainCommons/Community/discussions). For developers, interns, and patrons of Blockchain Commons, please use the discussions area of the [Community repo](https://github.com/BlockchainCommons/Community) to talk about general Blockchain Commons issues, the intern program, or topics other than the [Gordian System](https://github.com/BlockchainCommons/Gordian/discussions) or the [wallet standards](https://github.com/BlockchainCommons/AirgappedSigning/discussions), each of which have their own discussion areas.
+
+### Other Questions & Problems
+
+As an open-source, open-development community, Blockchain Commons does not have the resources to provide direct support of our projects. Please consider the discussions area as a locale where you might get answers to questions. Alternatively, please use this repository's [issues](./issues) feature. Unfortunately, we can not make any promises on response time.
+
+If your company requires support to use our projects, please feel free to contact us directly about options. We may be able to offer you a contract for support from one of our contributors, or we might be able to point you to another entity who can offer the contractual support that you need.
+
+### Credits
+
+The following people directly contributed to this repository. You can add your name here by getting involved. The first step is learning how to contribute from our [CONTRIBUTING.md](./CONTRIBUTING.md) documentation.
+
+| Name              | Role                | Github                                            | Email                                 | GPG Fingerprint                                    |
+| ----------------- | ------------------- | ------------------------------------------------- | ------------------------------------- | -------------------------------------------------- |
+| Christopher Allen | Principal Architect | [@ChristopherA](https://github.com/ChristopherA) | \<ChristopherA@LifeWithAlacrity.com\> | FDFE 14A5 4ECB 30FC 5D22  74EF F8D3 6C91 3574 05ED |
+| Gorazd Kovacic | Maintainer | [@gorazdko](https://github.com/gorazdko) | \<gorazdko@gmail.com\> | 41F0 EA16 99A7 4C1E 2FA4 1B53 8CF9 6BC3 FF9D BBCE |
+
+
+## Responsible Disclosure
+
+We want to keep all of our software safe for everyone. If you have discovered a security vulnerability, we appreciate your help in disclosing it to us in a responsible manner. We are unfortunately not able to offer bug bounties at this time.
+
+We do ask that you offer us good faith and use best efforts not to leak information or harm any user, their data, or our developer community. Please give us a reasonable amount of time to fix the issue before you publish it. Do not defraud our users or us in the process of discovery. We promise not to bring legal action against researchers who point out a problem provided they do their best to follow the these guidelines.
+
+### Reporting a Vulnerability
+
+Please report suspected security vulnerabilities in private via email to ChristopherA@BlockchainCommons.com (do not use this email for support). Please do NOT create publicly viewable issues for suspected security vulnerabilities.
+
+The following keys may be used to communicate sensitive information to developers:
+
+| Name              | Fingerprint                                        |
+| ----------------- | -------------------------------------------------- |
+| Christopher Allen | FDFE 14A5 4ECB 30FC 5D22  74EF F8D3 6C91 3574 05ED |
+
+You can import a key by running the following command with that individual’s fingerprint: `gpg --recv-keys "<fingerprint>"` Ensure that you put quotes around fingerprints that contain spaces.

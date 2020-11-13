@@ -53,7 +53,7 @@ pub fn verify(message: &[u8], public_key: &[u8], signature: &[u8]) -> bool {
         == 0
 }
 
-pub fn keypair(seed: &[u8]) -> ([u8; 64], [u8; 32]) {
+pub fn keypair(seed: &[u8]) -> ([u8; 64], [u8; 32], [u8; 64]) {
     let mut secret: [u8; 64] = {
         let mut hash_output = sha512::Hash::hash(seed);
         hash_output[0] &= 248;
@@ -61,15 +61,20 @@ pub fn keypair(seed: &[u8]) -> ([u8; 64], [u8; 32]) {
         hash_output[31] |= 64;
         hash_output
     };
+    let extended_secret_key = secret.clone();
+
     let a = ge_scalarmult_base(&secret[0..32]);
     let public_key = a.to_bytes();
     for (dest, src) in (&mut secret[32..64]).iter_mut().zip(public_key.iter()) {
         *dest = *src;
     }
+
+    // puts back the original seed in!!
     for (dest, src) in (&mut secret[0..32]).iter_mut().zip(seed.iter()) {
         *dest = *src;
     }
-    (secret, public_key)
+
+    (secret, public_key, extended_secret_key)
 }
 
 pub fn signature(message: &[u8], secret_key: &[u8], z: Option<&[u8]>) -> [u8; 64] {
