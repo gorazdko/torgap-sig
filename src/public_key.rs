@@ -5,6 +5,7 @@ use crate::errors::*;
 use crate::helpers::*;
 use crate::keynum::*;
 use base32::{decode, Alphabet};
+use sha3::{Digest, Sha3_256};
 use std::cmp;
 use std::fmt::Write as fmtWrite;
 use std::fs;
@@ -198,10 +199,31 @@ impl PublicKey {
     ) -> Result<PublicKey> {
         let mut pk = [0u8; PUBLICKEY_BYTES];
         // onion_address = base32(PUBKEY | CHECKSUM | VERSION) + ".onion"
+        // CHECKSUM = H(".onion checksum" | PUBKEY | VERSION)[:2]
         let onion_decoded =
             decode(Alphabet::RFC4648 { padding: false }, &onion_addr[0..56]).unwrap(); // TODO
 
-        // TODO handle error gracefully, check checksum and onion version 3
+        let mut hasher = Sha3_256::new();
+        hasher.update(b".onion checksum");
+        hasher.update(&onion_decoded[0..32]);
+        hasher.update([3]); // version
+        let dgst = hasher.finalize();
+        let mut chk_calc = [0u8; 2];
+        chk_calc.copy_from_slice(&dgst[0..2]);
+
+        if onion_decoded[34] != 3 {
+            return Err(PError::new(
+                ErrorKind::Io,
+                "Onion version incorrect".to_string(),
+            ));
+        }
+
+        if chk_calc != onion_decoded[32..34] {
+            return Err(PError::new(
+                ErrorKind::Io,
+                "Onion checksum incorrect".to_string(),
+            ));
+        }
 
         // read pubkey
         for (place, element) in pk.iter_mut().zip(onion_decoded.iter()) {

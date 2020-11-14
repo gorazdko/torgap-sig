@@ -1,4 +1,5 @@
 #[test]
+
 fn byte_array_store() {
     use crate::store_u64_le;
 
@@ -178,4 +179,62 @@ y/rUw2y8/hOUYjZU71eHp/Wo1KZ40fGy2VJEDl34XMJM+TX48Ss/17u3IvIfbVR1FkZZSNCisQbuQY+b
     let bin = b"test";
     verify(&pk, &signature_box, Cursor::new(bin), false, false)
         .expect("Signature with prehashing didn't verify");
+}
+
+#[test]
+fn test_pubkey_from_onion_address() {
+    use crate::public_key::PublicKey;
+    use crate::signature_box::SignatureBox;
+    let onion_address = "fscst5exmlmr262byztwz4kzhggjlzumvc2ndvgytzoucr2tkgxf7mid.onion";
+    let signature = "untrusted comment: signature from rsign secret key
+RWTFh+S84tByDUw+zC2dDGuaX3r3yAePDGhAaoNliwTfDek1ADKuc7Y/L5AKd089Y8k/HuXRRmNPO4cjsmE2dQLu0v7C3DC7SAk=
+trusted comment: fscst5exmlmr262byztwz4kzhggjlzumvc2ndvgytzoucr2tkgxf7mid.onion
+NbTt3wnK1ruWxPFstDT/bineOaX8mVlChY/R8xS9s0ERGfkA7rNDnbSqqJ7jbr8Af0/8ONWi/hRINxwCy6hSDQ==";
+    let signature_box = SignatureBox::from_string(&signature).unwrap();
+
+    let pubkey = PublicKey::from_onion_address(
+        onion_address,
+        signature_box.get_sig_alg(),
+        signature_box.get_keynum(),
+    )
+    .unwrap();
+
+    assert_eq!(
+        pubkey.to_base64(),
+        "RWTFh+S84tByDSyFKfSXYtkde0HGZ2zxWTmMleaMqLTR1NieXUFHU1Gu"
+    );
+
+    // TEST: bad onion checksum:
+    let onion_address = "fscst5exmlmr262byztwz4kzhggjlzumvc2ndvgytzoucr2tkkxf7mid.onion";
+    assert!(PublicKey::from_onion_address(
+        onion_address,
+        signature_box.get_sig_alg(),
+        signature_box.get_keynum(),
+    )
+    .is_err());
+}
+
+#[test]
+fn test_deterministic_seed() {
+    use crate::keypair::KeyPair;
+
+    // keys generated from the same deterministic key are always equal
+    let seed1 = vec![0; 32];
+    let keypair1 = KeyPair::generate_unencrypted_keypair(Some(seed1.clone())).unwrap();
+    let keypair2 = KeyPair::generate_unencrypted_keypair(Some(seed1)).unwrap();
+    assert_eq!(keypair1.sk, keypair2.sk);
+    assert_eq!(keypair1.pk, keypair2.pk);
+
+    // keys generated from different deterministic seeds are different
+    let seed2 = vec![1; 32];
+    let keypair3 = KeyPair::generate_unencrypted_keypair(Some(seed2)).unwrap();
+    assert!(keypair1.sk != keypair3.sk);
+
+    // deterministic seed is different than TRNG seed
+    let keypair4 = KeyPair::generate_unencrypted_keypair(None).unwrap();
+    assert!(keypair3.sk != keypair4.sk);
+
+    // only 32 byte seed allowed
+    let seed = vec![0; 16];
+    assert!(KeyPair::generate_unencrypted_keypair(Some(seed)).is_err());
 }

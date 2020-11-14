@@ -11,7 +11,7 @@ use sha3::{Digest, Sha3_256};
 use std::io::{self, Write};
 use std::u64;
 
-/// A key pair (`PublicKey` and `SecretKey`).
+/// A key pair (`PublicKey` and `SecretKey`, also in esk format - expanded secret key).
 #[derive(Clone, Debug)]
 pub struct KeyPair {
     pub pk: PublicKey,
